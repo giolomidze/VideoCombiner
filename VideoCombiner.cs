@@ -42,7 +42,8 @@ public class VideoCombiner
             Process ffmpeg = new Process();
             ffmpeg.StartInfo.FileName = _ffmpegPath;
             ffmpeg.StartInfo.Arguments = $"-f concat -safe 0 -i \"{tempFileList}\" -c copy \"{outputFileName}\"";
-            ffmpeg.StartInfo.UseShellExecute = false;
+            ffmpeg.StartInfo.UseShellExecute = false; // Run without shell
+            ffmpeg.StartInfo.CreateNoWindow = true; // Don't create a console window
             ffmpeg.StartInfo.RedirectStandardOutput = true;
             ffmpeg.StartInfo.RedirectStandardError = true;
             ffmpeg.ErrorDataReceived += (sender, e) => onProgressDataReceived?.Invoke(e.Data);

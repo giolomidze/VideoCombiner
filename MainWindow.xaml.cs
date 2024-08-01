@@ -52,9 +52,24 @@ namespace VideoMerger
 
                 try
                 {
-                    // Combine videos and handle progress updates
+                    // Start FFmpeg and report progress
+                    ProgressBar.IsIndeterminate = false;
                     await _videoCombiner.CombineVideosAsync(VideoListBox.Items.Cast<string>().ToList(), outputFileName,
                         _progressParser.Parse);
+
+                    // Indeterminate progress for finalization phase
+                    ProgressBar.IsIndeterminate = true;
+                    ProgressText.Text = "Finalizing...";
+
+                    // Wait a bit to simulate finalization (replace with actual wait if needed)
+                    await Task.Delay(2000); // This is a placeholder; actual time may vary
+
+                    // Clear progress indicators and file list
+                    ProgressBar.IsIndeterminate = false;
+                    ProgressBar.Value = 0;
+                    ProgressText.Text = "Progress: 0%";
+                    VideoListBox.Items.Clear();
+
                     MessageBox.Show("Videos combined successfully!", "Success", MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
@@ -79,6 +94,7 @@ namespace VideoMerger
                 ProgressText.Text = $"Progress: {progress:F2}%";
             });
         }
+
 
         private void VideoListBox_Drop(object sender, DragEventArgs e)
         {
