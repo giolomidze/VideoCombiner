@@ -3,7 +3,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Video Combiner" Height="350" Width="525">
     <Grid>
-        <ListBox Name="VideoListBox" AllowDrop="True" Drop="VideoListBox_Drop" />
-        <Button Name="CombineButton" Content="Combine" VerticalAlignment="Bottom" Click="CombineButton_Click"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" /> <!-- ListBox takes up most of the space -->
+            <RowDefinition Height="Auto" /> <!-- ProgressBar auto-sized -->
+            <RowDefinition Height="Auto" /> <!-- Combine Button auto-sized -->
+        </Grid.RowDefinitions>
+
+        <ListBox Name="VideoListBox" AllowDrop="True" Drop="VideoListBox_Drop" Grid.Row="0" Margin="10" />
+
+        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="10">
+            <ProgressBar Name="ProgressBar" Minimum="0" Maximum="100" Height="20" Margin="0,0,0,5"/>
+            <TextBlock Name="ProgressText" Text="Progress: 0%" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <Button Name="CombineButton" Content="Combine" Grid.Row="2" Margin="10" Click="CombineButton_Click"/>
     </Grid>
 </Window>

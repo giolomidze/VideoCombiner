@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace VideoMerger
@@ -50,8 +52,14 @@ namespace VideoMerger
             CombineVideos(videoFiles);
         }
 
-        private void CombineVideos(List<string> videoFiles)
+        private async void CombineVideos(List<string> videoFiles)
         {
+            // Sort the video files by creation date
+            var sortedFiles = videoFiles.Select(file => new FileInfo(file))
+                .OrderBy(fileInfo => fileInfo.CreationTime)
+                .Select(fileInfo => fileInfo.FullName)
+                .ToList();
+
             // Show SaveFileDialog to select output file location
             Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
             saveFileDialog.Filter = "MP4 files (*.mp4)|*.mp4|All files (*.*)|*.*";
@@ -60,39 +68,100 @@ namespace VideoMerger
 
             if (saveFileDialog.ShowDialog() == true)
             {
-                var outputFileName = saveFileDialog.FileName;
-                var ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "external", "ffmpeg.exe");
+                string outputFileName = saveFileDialog.FileName;
+                string ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "external", "ffmpeg.exe");
+
+                if (!File.Exists(ffmpegPath))
+                {
+                    MessageBox.Show(
+                        $"FFmpeg executable not found at {ffmpegPath}. Please ensure it is correctly placed.", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
 
                 // Create a temporary file list for FFmpeg
-                var tempFileList = Path.GetTempFileName();
-                using (var writer = new StreamWriter(tempFileList))
+                string tempFileList = Path.GetTempFileName();
+                using (StreamWriter writer = new StreamWriter(tempFileList))
                 {
-                    foreach (var file in videoFiles)
+                    foreach (string file in sortedFiles)
                     {
                         writer.WriteLine($"file '{file}'");
                     }
                 }
 
-                // Start FFmpeg process
-                var ffmpeg = new Process();
-                ffmpeg.StartInfo.FileName = ffmpegPath;
-                ffmpeg.StartInfo.Arguments = $"-f concat -safe 0 -i \"{tempFileList}\" -c copy \"{outputFileName}\"";
-                ffmpeg.StartInfo.UseShellExecute = false;
-                ffmpeg.StartInfo.RedirectStandardOutput = true;
-                ffmpeg.StartInfo.RedirectStandardError = true;
-                ffmpeg.Start();
-                ffmpeg.WaitForExit();
+                try
+                {
+                    // Determine the total duration (dummy value or calculate from files)
+                    double totalDuration = 100; // Placeholder; replace with actual total duration calculation
 
-                // Clean up
-                File.Delete(tempFileList);
+                    // Start FFmpeg process
+                    Process ffmpeg = new Process();
+                    ffmpeg.StartInfo.FileName = ffmpegPath;
+                    ffmpeg.StartInfo.Arguments =
+                        $"-f concat -safe 0 -i \"{tempFileList}\" -c copy \"{outputFileName}\"";
+                    ffmpeg.StartInfo.UseShellExecute = false;
+                    ffmpeg.StartInfo.RedirectStandardOutput = true;
+                    ffmpeg.StartInfo.RedirectStandardError = true;
+                    ffmpeg.ErrorDataReceived += (sender, e) => ParseFFmpegProgress(e.Data, totalDuration);
+                    ffmpeg.Start();
 
-                MessageBox.Show("Videos combined successfully!", "Success", MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    // Begin reading output
+                    ffmpeg.BeginErrorReadLine();
+
+                    // Wait for the process to exit
+                    await ffmpeg.WaitForExitAsync();
+
+                    if (ffmpeg.ExitCode == 0)
+                    {
+                        MessageBox.Show("Videos combined successfully!", "Success", MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("FFmpeg encountered an error during processing.", "Error", MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                finally
+                {
+                    // Clean up
+                    File.Delete(tempFileList);
+                }
             }
             else
             {
                 MessageBox.Show("Save operation was canceled.", "Canceled", MessageBoxButton.OK,
                     MessageBoxImage.Warning);
+            }
+        }
+
+        private void ParseFFmpegProgress(string data, double totalDuration)
+        {
+            if (string.IsNullOrWhiteSpace(data))
+                return;
+
+            // Sample progress output: frame=  220 fps=0.0 q=-1.0 Lsize=   13763kB time=00:00:09.00 bitrate=12522.5kbits/s speed=15.9x
+            var timeMatch = Regex.Match(data, @"time=(\d{2}:\d{2}:\d{2}.\d{2})");
+            if (timeMatch.Success)
+            {
+                var currentTime = TimeSpan.ParseExact(timeMatch.Groups[1].Value, @"hh\:mm\:ss\.ff",
+                    CultureInfo.InvariantCulture);
+
+                // Calculate the progress percentage
+                double progress = (currentTime.TotalSeconds / totalDuration) * 100;
+                progress = Math.Min(progress, 100); // Cap the progress at 100%
+
+                // Update UI on the main thread
+                Dispatcher.Invoke(() =>
+                {
+                    ProgressBar.Value = progress;
+                    ProgressText.Text = $"Progress: {progress:F2}%";
+                });
             }
         }
     }
