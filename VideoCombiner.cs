@@ -30,12 +30,10 @@ public class VideoCombiner
 
     public async Task CombineVideosAsync(List<string> videoFiles, string outputFileName)
     {
-        var sortedFiles = SortFilesByCreationDate(videoFiles);
-
         string tempFileList = Path.GetTempFileName();
         using (StreamWriter writer = new StreamWriter(tempFileList))
         {
-            foreach (string file in sortedFiles)
+            foreach (string file in videoFiles)
             {
                 writer.WriteLine($"file '{file}'");
             }
@@ -85,6 +83,7 @@ public class VideoCombiner
             }
         }
     }
+
 
     private List<string> SortFilesByCreationDate(List<string> files)
     {
