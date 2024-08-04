@@ -13,7 +13,7 @@ public class VideoCombiner(string ffmpegPath)
     public event Action<double> FinalizingProgressChanged = delegate { };
     public event Action<string> ProcessingProgressReceived = delegate { };
 
-    public bool IsRunning => !_ffmpegProcess.HasExited;
+    private bool IsRunning => !_ffmpegProcess.HasExited;
 
     public double TotalDuration => _totalDuration;
 
