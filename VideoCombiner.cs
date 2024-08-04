@@ -5,9 +5,8 @@ using File = System.IO.File;
 
 namespace VideoMerger;
 
-public class VideoCombiner
+public class VideoCombiner(string ffmpegPath)
 {
-    private readonly string _ffmpegPath;
     private Process _ffmpegProcess = null!;
     private double _totalDuration;
 
@@ -18,19 +17,14 @@ public class VideoCombiner
 
     public double TotalDuration => _totalDuration;
 
-    public VideoCombiner(string ffmpegPath)
-    {
-        _ffmpegPath = ffmpegPath;
-    }
-
     public async Task CombineVideosAsync(List<string> videoFiles, string outputFileName)
     {
         // Calculate total duration
         _totalDuration = CalculateTotalDuration(videoFiles);
 
         // Create a temporary file to store the list of video files
-        string tempFileList = Path.GetTempFileName();
-        using (StreamWriter writer = new StreamWriter(tempFileList))
+        var tempFileList = Path.GetTempFileName();
+        await using (StreamWriter writer = new StreamWriter(tempFileList))
         {
             foreach (string file in videoFiles)
             {
@@ -40,16 +34,16 @@ public class VideoCombiner
 
         try
         {
-            if (!File.Exists(_ffmpegPath))
+            if (!File.Exists(ffmpegPath))
             {
-                throw new FileNotFoundException("FFmpeg executable not found.", _ffmpegPath);
+                throw new FileNotFoundException("FFmpeg executable not found.", ffmpegPath);
             }
 
             _ffmpegProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = _ffmpegPath,
+                    FileName = ffmpegPath,
                     Arguments =
                         $"-f concat -safe 0 -i \"{tempFileList}\" -c copy \"{outputFileName}\" -progress pipe:1 -loglevel error",
                     UseShellExecute = false,
