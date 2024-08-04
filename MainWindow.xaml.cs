@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO;
 using System.Windows;
 
 namespace VideoMerger
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
-        private VideoCombiner _videoCombiner;
+        private readonly VideoCombiner _videoCombiner;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            string ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "external", "ffmpeg.exe");
+            var ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "external", "ffmpeg.exe");
             _videoCombiner = new VideoCombiner(ffmpegPath);
             _videoCombiner.FinalizingProgressChanged += OnFinalizingProgressChanged;
             _videoCombiner.ProcessingProgressReceived += OnProcessingProgressReceived;
@@ -65,26 +61,22 @@ namespace VideoMerger
 
         private void VideoListBox_Drop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            var droppedData = e.Data.GetData(DataFormats.FileDrop);
+            if (droppedData is not string[] files) return;
+            foreach (var file in files)
             {
-                var droppedData = e.Data.GetData(DataFormats.FileDrop);
-                if (droppedData is string[] files)
+                if (IsValidVideoFile(file))
                 {
-                    foreach (var file in files)
-                    {
-                        if (IsValidVideoFile(file))
-                        {
-                            VideoListBox.Items.Add(file);
-                        }
-                    }
+                    VideoListBox.Items.Add(file);
                 }
             }
         }
 
-        private bool IsValidVideoFile(string file)
+        private static bool IsValidVideoFile(string file)
         {
             string[] validExtensions = { ".mp4", ".avi", ".mkv", ".webm", ".mov" };
-            string extension = Path.GetExtension(file).ToLower();
+            var extension = Path.GetExtension(file).ToLower();
             return validExtensions.Contains(extension);
         }
 
