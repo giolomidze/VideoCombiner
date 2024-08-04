@@ -59,14 +59,8 @@ public class VideoCombiner
                 }
             };
 
-            _ffmpegProcess.OutputDataReceived += (sender, e) =>
-            {
-                if (e.Data != null) OnProcessingProgressReceived(e.Data);
-            };
-            _ffmpegProcess.ErrorDataReceived += (sender, e) =>
-            {
-                if (e.Data != null) OnProcessingProgressReceived(e.Data);
-            };
+            _ffmpegProcess.OutputDataReceived += (sender, e) => OnProcessingProgressReceived(e.Data);
+            _ffmpegProcess.ErrorDataReceived += (sender, e) => OnProcessingProgressReceived(e.Data);
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginOutputReadLine();
             _ffmpegProcess.BeginErrorReadLine();
@@ -100,14 +94,16 @@ public class VideoCombiner
                 var fileInfo = TagLib.File.Create(file);
                 totalDuration += fileInfo.Properties.Duration.TotalSeconds;
             }
-            catch
+            catch (Exception ex)
             {
-                // Handle exceptions, e.g., file not found, unable to read duration
+                // Log exception or handle error (e.g., file not found, unable to read duration)
+                Console.WriteLine($"Error reading file {file}: {ex.Message}");
             }
         }
 
         return totalDuration;
     }
+
 
     private void OnProcessingProgressReceived(string data)
     {
