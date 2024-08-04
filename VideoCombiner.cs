@@ -8,11 +8,11 @@ namespace VideoMerger;
 public class VideoCombiner
 {
     private readonly string _ffmpegPath;
-    private Process _ffmpegProcess;
+    private Process _ffmpegProcess = null!;
     private double _totalDuration;
 
-    public event Action<double> FinalizingProgressChanged;
-    public event Action<string> ProcessingProgressReceived;
+    public event Action<double> FinalizingProgressChanged = delegate { };
+    public event Action<string> ProcessingProgressReceived = delegate { };
 
     public bool IsRunning => !_ffmpegProcess.HasExited;
 
@@ -59,8 +59,14 @@ public class VideoCombiner
                 }
             };
 
-            _ffmpegProcess.OutputDataReceived += (sender, e) => OnProcessingProgressReceived(e.Data);
-            _ffmpegProcess.ErrorDataReceived += (sender, e) => OnProcessingProgressReceived(e.Data);
+            _ffmpegProcess.OutputDataReceived += (_, e) =>
+            {
+                if (e.Data != null) OnProcessingProgressReceived(e.Data);
+            };
+            _ffmpegProcess.ErrorDataReceived += (_, e) =>
+            {
+                if (e.Data != null) OnProcessingProgressReceived(e.Data);
+            };
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginOutputReadLine();
             _ffmpegProcess.BeginErrorReadLine();
@@ -83,7 +89,6 @@ public class VideoCombiner
         }
     }
 
-
     private double CalculateTotalDuration(List<string> videoFiles)
     {
         double totalDuration = 0;
@@ -104,28 +109,21 @@ public class VideoCombiner
         return totalDuration;
     }
 
-
     private void OnProcessingProgressReceived(string data)
     {
         if (string.IsNullOrEmpty(data)) return;
 
+        // Invoke the event to notify subscribers about new data
+        ProcessingProgressReceived(data);
+
         // Parse data for 'time=' and other progress indicators
         var timeMatch = Regex.Match(data, @"time=(\d+:\d+:\d+.\d+)");
-        var speedMatch = Regex.Match(data, @"speed=\s*(\d+.\d+)x");
 
-        if (timeMatch.Success)
-        {
-            var time = TimeSpan.Parse(timeMatch.Groups[1].Value);
-            // Notify listeners with time (e.g., update progress bar)
-            double progress = (_totalDuration > 0) ? (time.TotalSeconds / _totalDuration) * 100 : 0;
-            FinalizingProgressChanged?.Invoke(progress);
-        }
-
-        if (speedMatch.Success)
-        {
-            var speed = double.Parse(speedMatch.Groups[1].Value);
-            // Optionally use speed to estimate remaining time
-        }
+        if (!timeMatch.Success) return;
+        var time = TimeSpan.Parse(timeMatch.Groups[1].Value);
+        // Notify listeners with time (e.g., update progress bar)
+        var progress = (_totalDuration > 0) ? (time.TotalSeconds / _totalDuration) * 100 : 0;
+        FinalizingProgressChanged(progress);
     }
 
     private async Task MonitorFinalizingProgress(string outputFileName)
