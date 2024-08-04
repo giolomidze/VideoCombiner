@@ -1,27 +1,22 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using TagLib;
+using System.Text.RegularExpressions;
 using File = System.IO.File;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+
+namespace VideoMerger;
 
 public class VideoCombiner
 {
     private readonly string _ffmpegPath;
     private Process _ffmpegProcess;
+    private double _totalDuration;
 
     public event Action<double> FinalizingProgressChanged;
     public event Action<string> ProcessingProgressReceived;
 
-    public bool IsRunning => _ffmpegProcess != null && !_ffmpegProcess.HasExited;
+    public bool IsRunning => !_ffmpegProcess.HasExited;
+
+    public double TotalDuration => _totalDuration;
 
     public VideoCombiner(string ffmpegPath)
     {
@@ -30,6 +25,10 @@ public class VideoCombiner
 
     public async Task CombineVideosAsync(List<string> videoFiles, string outputFileName)
     {
+        // Calculate total duration
+        _totalDuration = CalculateTotalDuration(videoFiles);
+
+        // Create a temporary file to store the list of video files
         string tempFileList = Path.GetTempFileName();
         using (StreamWriter writer = new StreamWriter(tempFileList))
         {
@@ -60,8 +59,14 @@ public class VideoCombiner
                 }
             };
 
-            _ffmpegProcess.OutputDataReceived += (sender, e) => ProcessingProgressReceived?.Invoke(e.Data);
-            _ffmpegProcess.ErrorDataReceived += (sender, e) => ProcessingProgressReceived?.Invoke(e.Data);
+            _ffmpegProcess.OutputDataReceived += (sender, e) =>
+            {
+                if (e.Data != null) OnProcessingProgressReceived(e.Data);
+            };
+            _ffmpegProcess.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data != null) OnProcessingProgressReceived(e.Data);
+            };
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginOutputReadLine();
             _ffmpegProcess.BeginErrorReadLine();
@@ -85,22 +90,46 @@ public class VideoCombiner
     }
 
 
-    private List<string> SortFilesByCreationDate(List<string> files)
+    private double CalculateTotalDuration(List<string> videoFiles)
     {
-        return files.OrderBy(file =>
+        double totalDuration = 0;
+        foreach (var file in videoFiles)
         {
             try
             {
-                // Use FileInfo to get the creation time
-                var fileInfo = new FileInfo(file);
-                return fileInfo.CreationTime;
+                var fileInfo = TagLib.File.Create(file);
+                totalDuration += fileInfo.Properties.Duration.TotalSeconds;
             }
             catch
             {
-                // In case of error, return a default DateTime
-                return DateTime.MinValue;
+                // Handle exceptions, e.g., file not found, unable to read duration
             }
-        }).ToList();
+        }
+
+        return totalDuration;
+    }
+
+    private void OnProcessingProgressReceived(string data)
+    {
+        if (string.IsNullOrEmpty(data)) return;
+
+        // Parse data for 'time=' and other progress indicators
+        var timeMatch = Regex.Match(data, @"time=(\d+:\d+:\d+.\d+)");
+        var speedMatch = Regex.Match(data, @"speed=\s*(\d+.\d+)x");
+
+        if (timeMatch.Success)
+        {
+            var time = TimeSpan.Parse(timeMatch.Groups[1].Value);
+            // Notify listeners with time (e.g., update progress bar)
+            double progress = (_totalDuration > 0) ? (time.TotalSeconds / _totalDuration) * 100 : 0;
+            FinalizingProgressChanged?.Invoke(progress);
+        }
+
+        if (speedMatch.Success)
+        {
+            var speed = double.Parse(speedMatch.Groups[1].Value);
+            // Optionally use speed to estimate remaining time
+        }
     }
 
     private async Task MonitorFinalizingProgress(string outputFileName)

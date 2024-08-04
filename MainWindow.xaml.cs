@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -43,7 +42,10 @@ namespace VideoMerger
                 string outputFileName = saveFileDialog.FileName;
                 try
                 {
-                    await _videoCombiner.CombineVideosAsync(VideoListBox.Items.Cast<string>().ToList(), outputFileName);
+                    // Get the list of video files in the order they are listed in the ListBox
+                    List<string> videoFiles = VideoListBox.Items.Cast<string>().ToList();
+
+                    await _videoCombiner.CombineVideosAsync(videoFiles, outputFileName);
                     MessageBox.Show("Videos combined successfully!", "Success", MessageBoxButton.OK,
                         MessageBoxImage.Information);
                     VideoListBox.Items.Clear();
@@ -86,34 +88,6 @@ namespace VideoMerger
             return validExtensions.Contains(extension);
         }
 
-        private void OnProcessingProgressReceived(string data)
-        {
-            if (string.IsNullOrEmpty(data)) return;
-
-            // Parse data for 'size=', 'time=', 'bitrate=', 'speed='
-            var sizeMatch = Regex.Match(data, @"size=\s*(\d+)kB");
-            var timeMatch = Regex.Match(data, @"time=(\d+:\d+:\d+.\d+)");
-            var speedMatch = Regex.Match(data, @"speed=\s*(\d+.\d+)x");
-
-            if (sizeMatch.Success)
-            {
-                var size = int.Parse(sizeMatch.Groups[1].Value);
-                // Update UI with file size (e.g., FinalizingProgressBar.Value = ...)
-            }
-
-            if (timeMatch.Success)
-            {
-                var time = TimeSpan.Parse(timeMatch.Groups[1].Value);
-                // Update UI with time (e.g., ProcessingProgressBar.Value = ...)
-            }
-
-            if (speedMatch.Success)
-            {
-                var speed = double.Parse(speedMatch.Groups[1].Value);
-                // Optionally use speed to estimate remaining time
-            }
-        }
-
         private void OnFinalizingProgressChanged(double progress)
         {
             Dispatcher.Invoke(() =>
@@ -121,6 +95,12 @@ namespace VideoMerger
                 FinalizingProgressBar.Value = progress;
                 FinalizingText.Text = $"Finalizing: {progress:F2}%";
             });
+        }
+
+        private void OnProcessingProgressReceived(string data)
+        {
+            // This method is kept for completeness, but it won't display any speed-related information.
+            // If not needed, the event ProcessingProgressReceived can be removed from VideoCombiner.
         }
     }
 }

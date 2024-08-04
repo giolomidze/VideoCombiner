@@ -5,7 +5,7 @@ namespace VideoMerger;
 
 public class FFmpegProgressParser
 {
-    public event Action<double> ProgressChanged;
+    public event Action<double>? ProgressChanged;
 
     private double _totalDuration;
 
