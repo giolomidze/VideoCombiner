@@ -14,7 +14,6 @@ namespace VideoCombinerGUI
             var ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "external", "ffmpeg.exe");
             _videoCombiner = new VideoCombiner(ffmpegPath);
             _videoCombiner.FinalizingProgressChanged += OnFinalizingProgressChanged;
-            _videoCombiner.ProcessingProgressReceived += OnProcessingProgressReceived;
         }
 
         private async void CombineButton_Click(object sender, RoutedEventArgs e)
@@ -87,12 +86,6 @@ namespace VideoCombinerGUI
                 FinalizingProgressBar.Value = progress;
                 FinalizingText.Text = $"Finalizing: {progress:F2}%";
             });
-        }
-
-        private void OnProcessingProgressReceived(string data)
-        {
-            // This method is kept for completeness, but it won't display any speed-related information.
-            // If not needed, the event ProcessingProgressReceived can be removed from VideoCombiner.
         }
     }
 }
