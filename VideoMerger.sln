@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoMerger", "VideoMerger.csproj", "{87B36929-69F9-46FD-A78A-7D51F8241E73}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoCombinerGUI", "VideoCombinerGUI.csproj", "{87B36929-69F9-46FD-A78A-7D51F8241E73}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

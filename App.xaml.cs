@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace VideoMerger;
+namespace VideoCombinerGUI;
 
 /// <summary>
 /// Interaction logic for App.xaml

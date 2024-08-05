@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using File = System.IO.File;
 
-namespace VideoMerger;
+namespace VideoCombinerGUI;
 
 public class VideoCombiner(string ffmpegPath)
 {
