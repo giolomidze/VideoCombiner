@@ -1,8 +1,7 @@
 ﻿using System.IO;
 using System.Windows;
-using VideoCombinerGUI;
 
-namespace VideoMerger
+namespace VideoCombinerGUI
 {
     public partial class MainWindow
     {
