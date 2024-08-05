@@ -1,6 +1,7 @@
 # VideoCombiner
 
-VideoCombiner is a C# WPF application that allows users to combine multiple video files into a single video file using FFmpeg.
+VideoCombiner is a C# WPF application that allows users to combine multiple video files into a single video file using
+FFmpeg.
 
 ## Features
 
@@ -12,7 +13,7 @@ VideoCombiner is a C# WPF application that allows users to combine multiple vide
 
 ## Prerequisites
 
-- .NET Framework (version specified in your project settings)
+- .NET Framework
 - FFmpeg executable (placed in the `external` folder of the application)
 
 ## Installation
@@ -42,10 +43,6 @@ VideoCombiner is a C# WPF application that allows users to combine multiple vide
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-[Specify your license here]
 
 ## Acknowledgements
 
