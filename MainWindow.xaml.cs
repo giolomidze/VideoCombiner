@@ -13,7 +13,7 @@ namespace VideoCombinerGUI
 
             var ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "external", "ffmpeg.exe");
             _videoCombiner = new VideoCombiner(ffmpegPath);
-            _videoCombiner.FinalizingProgressChanged += OnFinalizingProgressChanged;
+            _videoCombiner.ProcessingProgressChanged += OnProcessingProgressChanged;
         }
 
         private async void CombineButton_Click(object sender, RoutedEventArgs e)
@@ -79,12 +79,12 @@ namespace VideoCombinerGUI
             return validExtensions.Contains(extension);
         }
 
-        private void OnFinalizingProgressChanged(double progress)
+        private void OnProcessingProgressChanged(double progress)
         {
             Dispatcher.Invoke(() =>
             {
-                FinalizingProgressBar.Value = progress;
-                FinalizingText.Text = $"Finalizing: {progress:F2}%";
+                LoadingProgressBar.Value = progress;
+                ProcessingText.Text = $"Processing: {progress:F2}%";
             });
         }
     }
