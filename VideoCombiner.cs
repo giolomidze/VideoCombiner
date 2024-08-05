@@ -10,7 +10,7 @@ public class VideoCombiner(string ffmpegPath)
     private Process _ffmpegProcess = null!;
     private double _totalDuration;
 
-    public event Action<double> FinalizingProgressChanged = delegate { };
+    public event Action<double> ProcessingProgressChanged = delegate { };
     public event Action<string> ProcessingProgressReceived = delegate { };
 
     private bool IsRunning => !_ffmpegProcess.HasExited;
@@ -72,7 +72,7 @@ public class VideoCombiner(string ffmpegPath)
                 throw new Exception("FFmpeg encountered an error during processing.");
             }
 
-            await MonitorFinalizingProgress(outputFileName);
+            await MonitorProcessingProgress(outputFileName);
         }
         finally
         {
@@ -117,10 +117,10 @@ public class VideoCombiner(string ffmpegPath)
         var time = TimeSpan.Parse(timeMatch.Groups[1].Value);
         // Notify listeners with time (e.g., update progress bar)
         var progress = (_totalDuration > 0) ? (time.TotalSeconds / _totalDuration) * 100 : 0;
-        FinalizingProgressChanged(progress);
+        ProcessingProgressChanged(progress);
     }
 
-    private async Task MonitorFinalizingProgress(string outputFileName)
+    private async Task MonitorProcessingProgress(string outputFileName)
     {
         const int refreshInterval = 500; // milliseconds
         FileInfo fileInfo = new FileInfo(outputFileName);
@@ -137,7 +137,7 @@ public class VideoCombiner(string ffmpegPath)
             {
                 double progress = (double)currentSize / (currentSize + 1) * 100;
                 previousSize = currentSize;
-                FinalizingProgressChanged?.Invoke(Math.Min(progress, 100));
+                ProcessingProgressChanged?.Invoke(Math.Min(progress, 100));
             }
             else if (!IsRunning)
             {
@@ -145,6 +145,6 @@ public class VideoCombiner(string ffmpegPath)
             }
         }
 
-        FinalizingProgressChanged?.Invoke(100);
+        ProcessingProgressChanged?.Invoke(100);
     }
 }
