@@ -1,11 +1,17 @@
-﻿using System.IO;
+﻿using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace VideoCombinerGUI
 {
-    public partial class MainWindow
+    public partial class MainWindow : Window
     {
         private readonly VideoCombiner _videoCombiner;
+        private static readonly string[] ValidVideoExtensions = { ".mp4", ".avi", ".mkv", ".webm", ".mov" };
 
         public MainWindow()
         {
@@ -14,6 +20,10 @@ namespace VideoCombinerGUI
             var ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "external", "ffmpeg.exe");
             _videoCombiner = new VideoCombiner(ffmpegPath);
             _videoCombiner.ProcessingProgressChanged += OnProcessingProgressChanged;
+
+            VideoListBox.AllowDrop = true;
+            VideoListBox.Drop += VideoListBox_Drop;
+            CombineButton.Click += CombineButton_Click;
         }
 
         private async void CombineButton_Click(object sender, RoutedEventArgs e)
@@ -25,7 +35,7 @@ namespace VideoCombinerGUI
                 return;
             }
 
-            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            var saveFileDialog = new SaveFileDialog
             {
                 Filter = "MP4 files (*.mp4)|*.mp4|All files (*.*)|*.*",
                 Title = "Save Combined Video As",
@@ -34,49 +44,51 @@ namespace VideoCombinerGUI
 
             if (saveFileDialog.ShowDialog() == true)
             {
-                string outputFileName = saveFileDialog.FileName;
-                try
-                {
-                    // Get the list of video files in the order they are listed in the ListBox
-                    List<string> videoFiles = VideoListBox.Items.Cast<string>().ToList();
-
-                    await _videoCombiner.CombineVideosAsync(videoFiles, outputFileName);
-                    MessageBox.Show("Videos combined successfully!", "Success", MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                    VideoListBox.Items.Clear();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
+                await CombineVideosAsync(saveFileDialog.FileName);
             }
-            else
+        }
+
+        private async Task CombineVideosAsync(string outputFileName)
+        {
+            try
             {
-                MessageBox.Show("Save operation was canceled.", "Canceled", MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                CombineButton.IsEnabled = false;
+                List<string> videoFiles = VideoListBox.Items.Cast<string>().ToList();
+
+                await _videoCombiner.CombineVideosAsync(videoFiles, outputFileName);
+
+                MessageBox.Show("Videos combined successfully!", "Success", MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                VideoListBox.Items.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                CombineButton.IsEnabled = true;
+                ResetProgressBar();
             }
         }
 
         private void VideoListBox_Drop(object sender, DragEventArgs e)
         {
             if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-            var droppedData = e.Data.GetData(DataFormats.FileDrop);
-            if (droppedData is not string[] files) return;
-            foreach (var file in files)
+
+            var files = e.Data.GetData(DataFormats.FileDrop) as string[];
+            if (files == null) return;
+
+            foreach (var file in files.Where(IsValidVideoFile))
             {
-                if (IsValidVideoFile(file))
-                {
-                    VideoListBox.Items.Add(file);
-                }
+                VideoListBox.Items.Add(file);
             }
         }
 
         private static bool IsValidVideoFile(string file)
         {
-            string[] validExtensions = { ".mp4", ".avi", ".mkv", ".webm", ".mov" };
-            var extension = Path.GetExtension(file).ToLower();
-            return validExtensions.Contains(extension);
+            return ValidVideoExtensions.Contains(Path.GetExtension(file).ToLower());
         }
 
         private void OnProcessingProgressChanged(double progress)
@@ -86,6 +98,12 @@ namespace VideoCombinerGUI
                 LoadingProgressBar.Value = progress;
                 ProcessingText.Text = $"Processing: {progress:F2}%";
             });
+        }
+
+        private void ResetProgressBar()
+        {
+            LoadingProgressBar.Value = 0;
+            ProcessingText.Text = "Processing: 0%";
         }
     }
 }
