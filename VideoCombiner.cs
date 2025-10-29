@@ -84,7 +84,7 @@ namespace VideoCombinerGUI
                 {
                     FileName = _ffmpegPath,
                     Arguments =
-                        $"-f concat -safe 0 -i \"{tempFileList}\" -c copy \"{outputFileName}\" -progress pipe:1 -loglevel error",
+                        $"-y -f concat -safe 0 -i \"{tempFileList}\" -c copy \"{outputFileName}\" -progress pipe:1 -loglevel error",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardError = true,
