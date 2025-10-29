@@ -13,7 +13,7 @@ FFmpeg.
 
 ## Prerequisites
 
-- .NET Framework
+- .NET 8.0 SDK
 - FFmpeg executable (placed in the `external` folder of the application)
 
 ## Installation
@@ -23,6 +23,41 @@ FFmpeg.
 3. Restore NuGet packages if necessary.
 4. Build the solution.
 5. Place the FFmpeg executable in the `external` folder of the output directory.
+
+## How to Run
+
+### From IDE (Visual Studio/Rider)
+
+1. Open the `VideoMerger.sln` solution file in Visual Studio or Rider.
+2. Build the solution (Build > Build Solution or Ctrl+Shift+B).
+3. Run the application (Debug > Start Debugging or F5).
+4. Ensure `ffmpeg.exe` is present in the `external` folder of the output directory (it should be copied automatically during build).
+
+### From Command Line
+
+1. Navigate to the project directory (where `VideoMerger.sln` is located).
+2. Restore NuGet packages (if needed):
+   ```bash
+   dotnet restore VideoMerger.sln
+   ```
+3. Run the application:
+   ```bash
+   dotnet run --project VideoCombinerGUI.csproj
+   ```
+   Or build and run the solution:
+   ```bash
+   dotnet build VideoMerger.sln
+   dotnet run --project VideoCombinerGUI.csproj
+   ```
+4. Ensure `ffmpeg.exe` is present in the `external` folder (it should be copied automatically).
+
+### From Compiled Executable
+
+1. After building the solution, navigate to the output directory:
+   - For Debug builds: `bin/Debug/net8.0-windows/`
+   - For Release builds: `bin/Release/net8.0-windows/`
+2. Double-click `VideoCombinerGUI.exe` to run the application.
+3. Ensure `ffmpeg.exe` is present in the `external` folder within the same directory as the executable.
 
 ## Usage
 
