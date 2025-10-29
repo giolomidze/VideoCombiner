@@ -28,26 +28,26 @@ FFmpeg.
 
 ### From IDE (Visual Studio/Rider)
 
-1. Open the `VideoMerger.sln` solution file in Visual Studio or Rider.
+1. Open the `VideoCombinerGUI.sln` solution file in Visual Studio or Rider.
 2. Build the solution (Build > Build Solution or Ctrl+Shift+B).
 3. Run the application (Debug > Start Debugging or F5).
 4. Ensure `ffmpeg.exe` is present in the `external` folder of the output directory (it should be copied automatically during build).
 
 ### From Command Line
 
-1. Navigate to the project directory (where `VideoMerger.sln` is located).
+1. Navigate to the project directory.
 2. Restore NuGet packages (if needed):
    ```bash
-   dotnet restore VideoMerger.sln
+   dotnet restore
    ```
 3. Run the application:
    ```bash
-   dotnet run --project VideoCombinerGUI.csproj
+   dotnet run
    ```
    Or build and run the solution:
    ```bash
-   dotnet build VideoMerger.sln
-   dotnet run --project VideoCombinerGUI.csproj
+   dotnet build
+   dotnet run
    ```
 4. Ensure `ffmpeg.exe` is present in the `external` folder (it should be copied automatically).
 

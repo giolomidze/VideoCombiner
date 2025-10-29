@@ -8,11 +8,11 @@ namespace VideoCombinerGUI
     public class VideoCombiner : IDisposable
     {
         private readonly string _ffmpegPath;
-        private Process _ffmpegProcess;
+        private Process? _ffmpegProcess;
         private double _totalDuration;
 
-        public event Action<double> ProcessingProgressChanged;
-        public event Action<string> ProcessingProgressReceived;
+        public event Action<double> ProcessingProgressChanged = null!;
+        public event Action<string> ProcessingProgressReceived = null!;
 
         public VideoCombiner(string ffmpegPath)
         {
@@ -40,7 +40,7 @@ namespace VideoCombinerGUI
             }
         }
 
-        private async Task<double> CalculateTotalDurationAsync(IEnumerable<string> videoFiles)
+        private Task<double> CalculateTotalDurationAsync(IEnumerable<string> videoFiles)
         {
             double totalDuration = 0;
             foreach (var file in videoFiles)
@@ -56,7 +56,7 @@ namespace VideoCombinerGUI
                 }
             }
 
-            return totalDuration;
+            return Task.FromResult(totalDuration);
         }
 
         private async Task<string> CreateTempFileListAsync(IEnumerable<string> videoFiles)
@@ -92,8 +92,8 @@ namespace VideoCombinerGUI
                 }
             };
 
-            _ffmpegProcess.OutputDataReceived += (_, e) => OnProcessingProgressReceived(e.Data);
-            _ffmpegProcess.ErrorDataReceived += (_, e) => OnProcessingProgressReceived(e.Data);
+            _ffmpegProcess.OutputDataReceived += (_, e) => { if (e.Data != null) OnProcessingProgressReceived(e.Data); };
+            _ffmpegProcess.ErrorDataReceived += (_, e) => { if (e.Data != null) OnProcessingProgressReceived(e.Data); };
 
             _ffmpegProcess.Start();
             _ffmpegProcess.BeginOutputReadLine();
@@ -128,7 +128,7 @@ namespace VideoCombinerGUI
             var fileInfo = new FileInfo(outputFileName);
             long previousSize = 0;
 
-            while (!_ffmpegProcess.HasExited || previousSize != fileInfo.Length)
+            while ((_ffmpegProcess != null && !_ffmpegProcess.HasExited) || previousSize != fileInfo.Length)
             {
                 await Task.Delay(refreshInterval);
                 fileInfo.Refresh();
