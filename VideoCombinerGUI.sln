@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoCombinerGUI", "VideoCombinerGUI.csproj", "{87B36929-69F9-46FD-A78A-7D51F8241E73}"
 EndProject
@@ -48,3 +48,4 @@ Global
 		{17A3243D-EDD6-4EE8-8F35-B3FC9A688F1A} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
+
