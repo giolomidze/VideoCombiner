@@ -38,7 +38,7 @@ The application allows users to add multiple video files through a drag-and-drop
 ### 2.3 Video Combination Functionality
 - **FR-3.1**: The application shall combine multiple video files sequentially into a single output file
 - **FR-3.2**: The application shall use FFmpeg's concat demuxer for efficient video combination
-- **FR-3.3**: The application shall preserve video quality by using stream copy (no re-encoding) when possible
+- **FR-3.3**: The application shall preserve video quality by using stream copy (no re-encoding); input videos must therefore share the same codec, resolution and frame rate, and mismatched inputs cause processing to fail
 - **FR-3.4**: The application shall calculate total duration of all input videos before processing
 - **FR-3.5**: The application shall create a temporary file list for FFmpeg processing
 - **FR-3.6**: The application shall clean up temporary files after processing completes
@@ -57,6 +57,7 @@ The application allows users to add multiple video files through a drag-and-drop
 - **FR-5.3**: The application shall set a default output filename ("combined_video.mp4")
 - **FR-5.4**: The application shall validate that at least one video file is selected before allowing combination
 - **FR-5.5**: The application shall clear the video list after successful combination
+- **FR-5.6**: The application shall overwrite an existing output file once the user has confirmed the overwrite in the save dialog
 
 ### 2.6 Error Handling
 - **FR-6.1**: The application shall validate that FFmpeg executable exists before processing
@@ -77,9 +78,7 @@ The application allows users to add multiple video files through a drag-and-drop
 ### 3.2 Dependencies
 - **TR-2.1**: The application requires FFmpeg executable (ffmpeg.exe) to be present in the `external` folder
 - **TR-2.2**: The application shall use TagLib# library for reading video metadata (duration)
-- **TR-2.3**: The application shall reference System.Diagnostics for process management
-- **TR-2.4**: The application shall use System.IO for file operations
-- **TR-2.5**: The application shall use System.Text.RegularExpressions for parsing FFmpeg output
+- **TR-2.3**: The application shall have no third-party dependencies beyond FFmpeg and TagLib#
 
 ### 3.3 File Format Support
 - **TR-3.1**: Input formats: MP4, AVI, MKV, WebM, MOV
@@ -106,8 +105,11 @@ The application allows users to add multiple video files through a drag-and-drop
 ### 4.2 Video List Display
 - **UI-2.1**: The application shall display added video files in a ListBox component
 - **UI-2.2**: The ListBox shall support drag-and-drop operations
-- **UI-2.3**: The ListBox shall display full file paths of added videos
+- **UI-2.3**: The ListBox shall display full file paths of added videos, trimmed with an ellipsis when too long
 - **UI-2.4**: The ListBox shall have margins for proper spacing
+- **UI-2.5**: Each list item shall show Move Up (↑), Move Down (↓) and Remove (✕) buttons with tooltips
+- **UI-2.6**: The Move Up button shall be disabled on the first item and the Move Down button on the last item
+- **UI-2.7**: The user shall be able to reorder items by dragging one item onto another
 
 ### 4.3 Progress Indicator
 - **UI-3.1**: The application shall display a progress bar with range 0-100
@@ -146,6 +148,7 @@ The application allows users to add multiple video files through a drag-and-drop
 - **NFR-4.1**: Code shall follow separation of concerns (UI logic vs. business logic)
 - **NFR-4.2**: The application shall use event-driven architecture for progress updates
 - **NFR-4.3**: Error handling shall be centralized and consistent
+- **NFR-4.4**: Core (non-UI) logic shall be covered by automated tests (xUnit, `tests/VideoCombinerGUI.Tests`), including an FFmpeg integration test
 
 ## 6. Installation and Deployment Requirements
 
@@ -155,7 +158,7 @@ The application allows users to add multiple video files through a drag-and-drop
 - **IDR-1.3**: The application shall automatically copy FFmpeg to the output directory during build
 
 ### 6.2 Prerequisites
-- **IDR-2.1**: Users must have .NET 8.0 runtime installed
+- **IDR-2.1**: Users must have the .NET 8.0 Desktop Runtime installed
 - **IDR-2.2**: The application requires Windows operating system
 
 ## 7. Future Enhancements (Out of Scope)

@@ -39,6 +39,9 @@ which one to start.
 Alternatively, open `VideoCombinerGUI.sln` in Visual Studio or Rider, set **VideoCombinerGUI** as the startup
 project, and run it. A build places the executable at `bin\Debug\net8.0-windows\VideoCombinerGUI.exe`.
 
+In VS Code (with the C# Dev Kit extension), press **F5** to build and debug the app. **Ctrl+Shift+B** runs the
+`build` task, and the `test` task (Terminal > Run Task) runs the test suite.
+
 ## Usage
 
 1. Launch the application.
@@ -72,6 +75,7 @@ dotnet test VideoCombinerGUI.sln --filter "Category!=Integration"
 | `VideoCombiner.cs`        | Core logic: reads durations, runs FFmpeg, reports progress  |
 | `FFmpegProgressParser.cs` | Parses FFmpeg `time=` output into a progress percentage     |
 | `external/ffmpeg.exe`     | Bundled FFmpeg binary                                       |
+| `.vscode/`                | VS Code launch config (F5) and build/test tasks             |
 | `tests/`                  | xUnit test project                                          |
 | `REQUIREMENTS.md`         | Functional and non-functional requirements                  |
 
