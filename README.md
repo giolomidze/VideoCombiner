@@ -4,7 +4,8 @@ VideoCombiner is a Windows desktop app (C#, WPF, .NET 8) that joins multiple vid
 
 ## Features
 
-- Drag and drop video files onto the window to queue them
+- Drag and drop video files onto the window to queue them (files already in the list are skipped)
+- Reorder the list with the ↑/↓ buttons or by dragging items, and remove items with ✕
 - Accepts `.mp4`, `.avi`, `.mkv`, `.webm` and `.mov` files
 - Joins clips with FFmpeg's concat demuxer without re-encoding, so it's fast and lossless
 - Shows progress while combining
@@ -14,8 +15,6 @@ VideoCombiner is a Windows desktop app (C#, WPF, .NET 8) that joins multiple vid
 - **Clips must share the same encoding.** Videos are joined with `-c copy` (no re-encoding), so every clip needs the
   same codec, resolution and frame rate. This is typical of clips from the same camera or export preset. Mixing
   containers or codecs (for example, a `.webm` with a `.mov`) will usually fail or produce a broken file.
-- **Order is fixed.** Videos are combined in the order they were dropped, and the list can't be reordered or edited.
-  To change the order, restart the app and drop the files again.
 - **Windows only**, because it uses WPF.
 
 ## Prerequisites
@@ -37,23 +36,24 @@ dotnet run --project VideoCombinerGUI.csproj
 Name the project explicitly: the solution contains both the app and its tests, so a bare `dotnet run` can't tell
 which one to start.
 
-Alternatively, open `VideoMerger.sln` in Visual Studio or Rider, set **VideoCombinerGUI** as the startup project, and
-run it. A build places the executable at `bin\Debug\net8.0-windows\VideoCombinerGUI.exe`.
+Alternatively, open `VideoCombinerGUI.sln` in Visual Studio or Rider, set **VideoCombinerGUI** as the startup
+project, and run it. A build places the executable at `bin\Debug\net8.0-windows\VideoCombinerGUI.exe`.
 
 ## Usage
 
 1. Launch the application.
-2. Drag and drop video files onto the list, in the order you want them combined.
-3. Click **Combine Videos**.
-4. Choose a location and file name for the output (default: `combined_video.mp4`).
-5. Wait for the progress bar to finish. A confirmation appears when it's done, and the list is cleared.
+2. Drag and drop video files onto the list.
+3. Arrange them in the order you want: use ↑/↓ or drag an item onto another to move it, and ✕ to remove it.
+4. Click **Combine Videos**.
+5. Choose a location and file name for the output (default: `combined_video.mp4`).
+6. Wait for the progress bar to finish. A confirmation appears when it's done, and the list is cleared.
 
 ## Tests
 
 Tests live in `tests/VideoCombinerGUI.Tests` and use xUnit v3.
 
 ```
-dotnet test VideoMerger.sln
+dotnet test VideoCombinerGUI.sln
 ```
 
 The suite includes an integration test that generates two short clips with the bundled FFmpeg and combines them. It
@@ -61,7 +61,7 @@ is tagged `Category=Integration` and skips itself if `external/ffmpeg.exe` is mi
 tests:
 
 ```
-dotnet test VideoMerger.sln --filter "Category!=Integration"
+dotnet test VideoCombinerGUI.sln --filter "Category!=Integration"
 ```
 
 ## Project structure
@@ -73,6 +73,7 @@ dotnet test VideoMerger.sln --filter "Category!=Integration"
 | `FFmpegProgressParser.cs` | Parses FFmpeg `time=` output into a progress percentage     |
 | `external/ffmpeg.exe`     | Bundled FFmpeg binary                                       |
 | `tests/`                  | xUnit test project                                          |
+| `REQUIREMENTS.md`         | Functional and non-functional requirements                  |
 
 ## Dependencies
 

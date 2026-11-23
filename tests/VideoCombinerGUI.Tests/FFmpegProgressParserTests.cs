@@ -1,4 +1,4 @@
-using VideoMerger;
+using VideoCombinerGUI;
 
 namespace VideoCombinerGUI.Tests;
 
