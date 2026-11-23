@@ -1,50 +1,85 @@
 # VideoCombiner
 
-VideoCombiner is a C# WPF application that allows users to combine multiple video files into a single video file using
-FFmpeg.
+VideoCombiner is a Windows desktop app (C#, WPF, .NET 8) that joins multiple video files into one using FFmpeg.
 
 ## Features
 
-- Drag and drop interface for adding video files
-- Supports multiple video formats (.mp4, .avi, .mkv, .webm, .mov)
-- Combines videos using FFmpeg
-- Real-time progress tracking
-- Simple and intuitive user interface
+- Drag and drop video files onto the window to queue them (files already in the list are skipped)
+- Reorder the list with the ↑/↓ buttons or by dragging items, and remove items with ✕
+- Accepts `.mp4`, `.avi`, `.mkv`, `.webm` and `.mov` files
+- Joins clips with FFmpeg's concat demuxer without re-encoding, so it's fast and lossless
+- Shows progress while combining
+
+## Limitations
+
+- **Clips must share the same encoding.** Videos are joined with `-c copy` (no re-encoding), so every clip needs the
+  same codec, resolution and frame rate. This is typical of clips from the same camera or export preset. Mixing
+  containers or codecs (for example, a `.webm` with a `.mov`) will usually fail or produce a broken file.
+- **Windows only**, because it uses WPF.
 
 ## Prerequisites
 
-- .NET Framework
-- FFmpeg executable (placed in the `external` folder of the application)
+- Windows
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or newer (to build), or the .NET 8 Desktop Runtime
+  (to run a prebuilt copy)
 
-## Installation
+FFmpeg is included at `external/ffmpeg.exe` and the build copies it next to the app, so you don't need to install it.
 
-1. Clone this repository or download the source code.
-2. Open the solution in Visual Studio.
-3. Restore NuGet packages if necessary.
-4. Build the solution.
-5. Place the FFmpeg executable in the `external` folder of the output directory.
+## Build and run
+
+From the repository root:
+
+```
+dotnet run --project VideoCombinerGUI.csproj
+```
+
+Name the project explicitly: the solution contains both the app and its tests, so a bare `dotnet run` can't tell
+which one to start.
+
+Alternatively, open `VideoCombinerGUI.sln` in Visual Studio or Rider, set **VideoCombinerGUI** as the startup
+project, and run it. A build places the executable at `bin\Debug\net8.0-windows\VideoCombinerGUI.exe`.
 
 ## Usage
 
 1. Launch the application.
-2. Drag and drop video files into the list box, or use the file dialog to add videos.
-3. Arrange the videos in the desired order (if needed).
-4. Click the "Combine" button.
-5. Choose a location and filename for the output video.
-6. Wait for the combining process to complete.
+2. Drag and drop video files onto the list.
+3. Arrange them in the order you want: use ↑/↓ or drag an item onto another to move it, and ✕ to remove it.
+4. Click **Combine Videos**.
+5. Choose a location and file name for the output (default: `combined_video.mp4`).
+6. Wait for the progress bar to finish. A confirmation appears when it's done, and the list is cleared.
+
+## Tests
+
+Tests live in `tests/VideoCombinerGUI.Tests` and use xUnit v3.
+
+```
+dotnet test VideoCombinerGUI.sln
+```
+
+The suite includes an integration test that generates two short clips with the bundled FFmpeg and combines them. It
+is tagged `Category=Integration` and skips itself if `external/ffmpeg.exe` is missing. To run only the fast unit
+tests:
+
+```
+dotnet test VideoCombinerGUI.sln --filter "Category!=Integration"
+```
+
+## Project structure
+
+| Path                      | Purpose                                                     |
+|---------------------------|-------------------------------------------------------------|
+| `MainWindow.xaml(.cs)`    | UI: drag-and-drop list, progress bar, combine button        |
+| `VideoCombiner.cs`        | Core logic: reads durations, runs FFmpeg, reports progress  |
+| `FFmpegProgressParser.cs` | Parses FFmpeg `time=` output into a progress percentage     |
+| `external/ffmpeg.exe`     | Bundled FFmpeg binary                                       |
+| `tests/`                  | xUnit test project                                          |
+| `REQUIREMENTS.md`         | Functional and non-functional requirements                  |
 
 ## Dependencies
 
-- System.Diagnostics
-- System.IO
-- System.Text.RegularExpressions
-- TagLib# (for reading video durations)
+- [FFmpeg](https://ffmpeg.org/) for video processing (bundled)
+- [TagLib#](https://github.com/mono/taglib-sharp) (NuGet `TagLibSharp`) for reading video durations
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Acknowledgements
-
-- This project uses FFmpeg (https://ffmpeg.org/) for video processing.
-- TagLib# is used for reading video metadata.
+Contributions are welcome! Please run `dotnet test` before opening a pull request.
